@@ -86,7 +86,7 @@ def delete_record():
     return make_succ_response(0)
 
 
-@app.route('/api/get_user_phone', methods=['GET'])
+@app.route('/api/get_user_phone', methods=['POST'])
 def get_user_phone():
     """
     :return:获取手机号
