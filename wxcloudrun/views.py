@@ -1,9 +1,8 @@
 from datetime import datetime
-from flask import render_template, request
+from flask import request
 from run import app
-from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid, \
-    insert_book_record, get_book_available, delete_bookbyid
-from wxcloudrun.model import Counters, Book_Record
+from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid
+from wxcloudrun.model import Book_Record
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
 
@@ -23,11 +22,6 @@ def book_record():
     # 获取请求体参数
     params = request.get_json()
     record = Book_Record()
-
-    # 检查参数
-    # if 'action' not in params:
-    #     return make_err_response('缺少action参数')
-
     record.userid = request.headers['X-WX-OPENID']
     record.book_type = params.get("book_type")
     record.book_num = params.get("book_num")
@@ -94,8 +88,10 @@ def get_user_phone():
 
     # 获取请求体参数
     wxOpenid = request.headers['X-WX-OPENID']
+    print()
     params = request.get_json()
     result = requests.post('http://api.weixin.qq.com/wxa/getopendata', params={"openid": wxOpenid},
                            data={'cloudid_list': [params.get("cloudid")]})
+    r = result.json()
 
-    return make_succ_response(result[0]['json']['data']['phoneNumber'])
+    return make_succ_response(r['data_list'][0]['json']['data']['phoneNumber'])
