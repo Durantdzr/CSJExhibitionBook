@@ -38,7 +38,10 @@ def get_book_available_bytype(book_type):
                                               db.func.sum(Book_Record.book_num).label('use_num')).filter(
         Book_Record.status == 1, Book_Record.book_type == book_type).group_by(
         Book_Record.book_type).all()
-    return available_num-use_num[0].use_num
+    if len(use_num)==0:
+        return available_num
+    else:
+        return available_num-use_num[0].use_num
 
 
 def delete_bookbyid(id):

@@ -20,7 +20,6 @@ def book_record():
     """
     :return:提交预约
     """
-
     # 获取请求体参数
     params = request.get_json()
     record = Book_Record()
@@ -97,6 +96,4 @@ def get_user_phone():
     params = request.get_json()
     result = requests.post('http://api.weixin.qq.com/wxa/getopendata', params={"openid": wxOpenid},
                            json={'cloudid_list': [params.get("cloudid")]})
-    # r = result.json()
-
     return make_succ_response(result.json())
