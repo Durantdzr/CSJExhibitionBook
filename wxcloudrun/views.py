@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import request
 from run import app
-from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid
+from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid,get_book_available_bytype
 from wxcloudrun.model import Book_Record
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
@@ -28,8 +28,12 @@ def book_record():
     record.booker_name = params.get("booker_name")
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
-    insert_book_record(record)
-    return make_succ_response(0) if record is None else make_succ_response(record.id)
+    available_num=get_book_available_bytype(params.get("book_type"))
+    if int(available_num)>=int(params.get("book_num")):
+        insert_book_record(record)
+        return make_succ_response(record.id)
+    else:
+        return make_err_response('超过预约人数上限')
 
 
 @app.route('/api/get_book_history', methods=['GET'])
