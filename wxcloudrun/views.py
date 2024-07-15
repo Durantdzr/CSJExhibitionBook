@@ -99,6 +99,6 @@ def get_user_phone():
     result = requests.post('http://api.weixin.qq.com/wxa/getopendata', params={"openid": wxOpenid},
                            data={'cloudid_list': [params.get("cloudid")]})
     r = result.json()
-    logger.info(r)
+    print(r)
 
     return make_succ_response(r['data_list'][0]['json']['data']['phoneNumber'])
