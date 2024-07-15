@@ -5,7 +5,9 @@ from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookby
 from wxcloudrun.model import Book_Record
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
-
+import logging
+# 初始化日志
+logger = logging.getLogger('log')
 
 @app.route('/api/get_available_num', methods=['GET'])
 def get_available_num():
@@ -97,5 +99,6 @@ def get_user_phone():
     result = requests.post('http://api.weixin.qq.com/wxa/getopendata', params={"openid": wxOpenid},
                            data={'cloudid_list': [params.get("cloudid")]})
     r = result.json()
+    logger.info(r)
 
     return make_succ_response(r['data_list'][0]['json']['data']['phoneNumber'])
