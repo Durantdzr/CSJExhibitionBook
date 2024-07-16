@@ -56,7 +56,7 @@ def get_book_history():
 @app.route('/api/get_book_record', methods=['GET'])
 def get_book_record():
     """
-        :return:提交预约
+        :return:我的预约记录列表
     """
     if datetime.now() > datetime(datetime.now().year, datetime.now().month, 16):
         return make_succ_response([])
@@ -97,3 +97,21 @@ def get_user_phone():
     result = requests.post('http://api.weixin.qq.com/wxa/getopendata', params={"openid": wxOpenid},
                            json={'cloudid_list': [params.get("cloudid")]})
     return make_succ_response(result.json())
+
+
+@app.route('/api/get_user_book_enable', methods=['GET'])
+def get_user_book_enable():
+    """
+        :return:获取用户预约状态
+    """
+    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14,19):
+    #     return make_err_response({"status":0,"msg":"预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
+    available=get_book_available()
+    if available[0]["avaliable_num"]<0 and available[1]["avaliable_num"]<0:
+        return make_err_response({"status": 0, "msg": "本月预约参观人数已满"})
+    userid = request.headers['X-WX-OPENID']
+    records = Book_Record.query.filter(Book_Record.userid == userid).filter(
+        Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).first()
+    if records is not None and len(records)>0:
+        return make_err_response({"status": 0, "msg": "本月已有预约"})
+    return make_succ_response({"status": 1, "msg": "可以预约"})
