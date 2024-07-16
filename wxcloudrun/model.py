@@ -26,9 +26,10 @@ class Book_Record(db.Model):
         return self.book_mouth + '-15 ' + self.book_time_interval.get(self.book_type)
 
     def book_status(self):
+        book_time=datetime.strptime(self.book_mouth, "%Y-%m")
         if self.status == 0:
             return '已取消'
-        elif datetime.now() > datetime(datetime.now().year, datetime.now().month, 16):
+        elif datetime.now() > datetime(book_time.year, book_time.month, 16):
             return '已出行'
         else:
-            return '已预约'
+            return '未出行'
