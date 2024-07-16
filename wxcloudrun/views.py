@@ -104,8 +104,8 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14,19):
-    #     return make_err_response({"status":0,"msg":"预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
+    if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14,19):
+        return make_err_response({"status":0,"msg":"预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
     available=get_book_available()
     if available[0]["avaliable_num"]<0 and available[1]["avaliable_num"]<0:
         return make_err_response({"status": 0, "msg": "本月预约参观人数已满"})
