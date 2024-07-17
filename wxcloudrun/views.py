@@ -1,13 +1,15 @@
 from datetime import datetime
 from flask import request
 from run import app
-from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid,get_book_available_bytype
+from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype
 from wxcloudrun.model import Book_Record
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
 import logging
+
 # 初始化日志
 logger = logging.getLogger('log')
+
 
 @app.route('/api/get_available_num', methods=['GET'])
 def get_available_num():
@@ -29,8 +31,8 @@ def book_record():
     record.booker_name = params.get("booker_name")
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
-    available_num=get_book_available_bytype(params.get("book_type"))
-    if int(available_num)>=int(params.get("book_num")):
+    available_num = get_book_available_bytype(params.get("book_type"))
+    if int(available_num) >= int(params.get("book_num")):
         insert_book_record(record)
         return make_succ_response(record.id)
     else:
@@ -104,14 +106,36 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14,19):
-        return make_err_response({"status":0,"msg":"预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
-    available=get_book_available()
-    if available[0]["avaliable_num"]<0 and available[1]["avaliable_num"]<0:
+    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14, 19):
+    #     return make_err_response({"status": 0, "msg": "预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
+    available = get_book_available()
+    if available[0]["avaliable_num"] < 0 and available[1]["avaliable_num"] < 0:
         return make_err_response({"status": 0, "msg": "本月预约参观人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(
         Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).first()
-    if records is not None and len(records)>0:
+    if records is not None and len(records) > 0:
         return make_err_response({"status": 0, "msg": "本月已有预约"})
     return make_succ_response({"status": 1, "msg": "可以预约"})
+
+
+@app.route('/api/send_msg', methods=['POST'])
+def send_msg():
+    """
+        :return:发送消息
+    """
+    userid = request.get_json()
+    wxOpenid=request.headers['X-WX-OPENID']
+    data = {
+        "touser": userid.get("openid"),
+        "msgtype": "text",
+        "text":
+            {
+                "content": "Hello World"
+            }
+    }
+
+    result = requests.post('http://api.weixin.qq.com/cgi-bin/message/custom/send', params={"openid": wxOpenid},
+                           json=data)
+
+    return make_succ_response(result.json())
