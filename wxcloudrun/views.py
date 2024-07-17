@@ -114,9 +114,10 @@ def get_user_book_enable():
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(
         Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).first()
-    if records is not None and len(records) > 0:
-        return make_err_response({"status": 0, "msg": "本月已有预约"})
-    return make_succ_response({"status": 1, "msg": "可以预约"})
+    if records is None :
+        return make_succ_response({"status": 1, "msg": "可以预约"})
+    return make_err_response({"status": 0, "msg": "本月已有预约"})
+
 
 
 @app.route('/api/send_msg', methods=['POST'])
