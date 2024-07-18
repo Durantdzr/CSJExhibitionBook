@@ -130,7 +130,6 @@ def send_msg():
     data = {
         "touser": userid.get("openid"),
         "template_id": "MzOVSb0bt7cnU6zp_xOWNCDni7OrsjG5dJjVgI_teAg",
-        "page": "index",
         "data": {
             "time1": {
                 "value": "2019年10月1日"
@@ -141,7 +140,9 @@ def send_msg():
             "thing9": {
                 "value": "您预定的参观申请因故取消，敬请谅解。"
             }
-        }
+        },
+        "miniprogram_state":"trial",
+        "lang":"zh_CN"
     }
 
     result = requests.post('http://api.weixin.qq.com/cgi-bin/message/subscribe/send', params={"openid": wxOpenid},
