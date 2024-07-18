@@ -129,14 +129,22 @@ def send_msg():
     wxOpenid=request.headers['X-WX-OPENID']
     data = {
         "touser": userid.get("openid"),
-        "msgtype": "text",
-        "text":
-            {
-                "content": "Hello World"
+        "template_id": "MzOVSb0bt7cnU6zp_xOWNCDni7OrsjG5dJjVgI_teAg",
+        "page": "index",
+        "data": {
+            "time1": {
+                "value": "2019年10月1日"
+            },
+            "thing5": {
+                "value": "长三角示范区展览馆"
+            },
+            "thing9": {
+                "value": "您预定的参观申请因故取消，敬请谅解。"
             }
+        }
     }
 
-    result = requests.post('http://api.weixin.qq.com/cgi-bin/message/custom/send', params={"openid": wxOpenid},
+    result = requests.post('http://api.weixin.qq.com/cgi-bin/message/subscribe/send', params={"openid": wxOpenid},
                            json=data)
 
     return make_succ_response(result.json())
