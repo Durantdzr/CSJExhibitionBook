@@ -60,7 +60,7 @@ def get_book_record():
     """
         :return:我的预约记录列表
     """
-    if datetime.now() > datetime(datetime.now().year, datetime.now().month, 16):
+    if datetime.now() > datetime(datetime.now().year, datetime.now().month, 28):
         return make_succ_response([])
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(

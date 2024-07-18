@@ -23,13 +23,13 @@ class Book_Record(db.Model):
     book_time_interval = {"上午": "09:00-11:00", "下午": "13:00-16:00"}
 
     def book_time(self):
-        return self.book_mouth + '-15 ' + self.book_time_interval.get(self.book_type)
+        return self.book_mouth + '-28 ' + self.book_time_interval.get(self.book_type)
 
     def book_status(self):
         book_time=datetime.strptime(self.book_mouth, "%Y-%m")
         if self.status == 0:
             return '已取消'
-        elif datetime.now() > datetime(book_time.year, book_time.month, 16):
+        elif datetime.now() > datetime(book_time.year, book_time.month, 28):
             return '已出行'
         else:
             return '未出行'
