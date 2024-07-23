@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request
 from run import app
-from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype
-from wxcloudrun.model import Book_Record
+from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
+    get_available_open_day, get_book_available_openday
+from wxcloudrun.model import Book_Record, Exhibition_Open_Day
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
 import logging
@@ -13,7 +14,10 @@ logger = logging.getLogger('log')
 
 @app.route('/api/get_available_num', methods=['GET'])
 def get_available_num():
-    available = get_book_available()
+    openday = request.args.get('openday')
+    available = get_book_available_openday(openday)
+    if available is None:
+        return make_err_response({"status": 0, "msg": "当前日期非可预约开放日"})
     return make_succ_response(available)
 
 
@@ -31,7 +35,8 @@ def book_record():
     record.booker_name = params.get("booker_name")
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
-    available_num = get_book_available_bytype(params.get("book_type"))
+    record.openday = params.get("openday")
+    available_num = get_book_available_bytype(params.get("book_type"), params.get("openday"))
     if int(available_num) >= int(params.get("book_num")):
         insert_book_record(record)
         return make_succ_response(record.id)
@@ -60,11 +65,11 @@ def get_book_record():
     """
         :return:我的预约记录列表
     """
-    if datetime.now() > datetime(datetime.now().year, datetime.now().month, 28):
-        return make_succ_response([])
+    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 28):
+    #     return make_succ_response([])
     userid = request.headers['X-WX-OPENID']
-    records = Book_Record.query.filter(Book_Record.userid == userid).filter(
-        Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).all()
+    records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
+                                       Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).all()
     result = []
     for record in records:
         result.append(
@@ -106,18 +111,18 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 14, 19):
-    #     return make_err_response({"status": 0, "msg": "预约时段为每月1号9:00至14号19:00，当前时段不可预约"})
-    available = get_book_available()
-    if available[0]["avaliable_num"] < 0 and available[1]["avaliable_num"] < 0:
-        return make_err_response({"status": 0, "msg": "本月预约参观人数已满"})
+    if get_book_available() < 0 :
+        return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(
         Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).first()
-    if records is None :
-        return make_succ_response({"status": 1, "msg": "可以预约"})
+    if records is None:
+        openday = get_available_open_day()
+        if len(openday) > 0:
+            return make_succ_response({"status": 1, "openday": openday})
+        else:
+            return make_err_response({"status": 0, "msg": "当前时段无可预约开放日"})
     return make_err_response({"status": 0, "msg": "本月已有预约"})
-
 
 
 @app.route('/api/send_msg', methods=['POST'])
@@ -126,7 +131,7 @@ def send_msg():
         :return:发送消息
     """
     userid = request.get_json()
-    wxOpenid=request.headers['X-WX-OPENID']
+    wxOpenid = request.headers['X-WX-OPENID']
     data = {
         "touser": userid.get("openid"),
         "template_id": "MzOVSb0bt7cnU6zp_xOWNCDni7OrsjG5dJjVgI_teAg",
@@ -141,10 +146,9 @@ def send_msg():
                 "value": "您预定的参观申请因故取消，敬请谅解。"
             }
         },
-        "miniprogram_state":"trial",
-        "lang":"zh_CN"
+        "miniprogram_state": "trial",
+        "lang": "zh_CN"
     }
-
 
     result = requests.post('http://api.weixin.qq.com/cgi-bin/message/subscribe/send', params={"openid": wxOpenid},
                            json=data)
