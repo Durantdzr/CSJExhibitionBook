@@ -4,7 +4,7 @@ from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
     get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo
 from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList
-from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
+from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response,make_succ_page_response
 import requests
 import logging
 
@@ -184,10 +184,10 @@ def get_total_book_record():
                                                               Book_Record.booker_phone.desc()).paginate(page,
                                                                                                         per_page=page_size,
                                                                                                         error_out=False)
-    return make_succ_response([{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
+    return make_succ_page_response(data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
                                 "book_type": record.book_type, "booker_phone": record.booker_phone,
                                 "book_time": record.book_time(), 'status': record.book_status()} for record in
-                               records.items])
+                               records.items],total=records.total)
 
 
 @app.route('/api/manage/create_blacklist', methods=['POST'])
