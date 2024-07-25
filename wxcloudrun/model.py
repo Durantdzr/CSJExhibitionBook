@@ -13,7 +13,7 @@ class Book_Record(db.Model):
     create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now())
     update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now())
     book_type = db.Column('book_type', db.String(10), nullable=False, default='上午')
-    book_mouth = db.Column('book_mouth', db.String(10), nullable=False, default=datetime.now().strftime('%Y-%m'))
+    book_mouth = db.Column('book_mouth', db.String(10), nullable=False)
     openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now().strftime('%Y-%m-%d'))
     booker_name = db.Column('booker_name', db.String(100))
     booker_phone = db.Column('booker_phone', db.String(100))
@@ -59,4 +59,14 @@ class Exhibition_Open_Day(db.Model):
     begintime_PM = db.Column('begintime_PM', db.INT, default=13)
     endtime_AM = db.Column('endtime_AM', db.INT, default=11)
     endtime_PM = db.Column('endtime_PM', db.INT, default=17)
+    status = db.Column('status', db.INT, default=1)
+class BlackList(db.Model):
+    # 设置结构体表格名称
+    __tablename__ = 'blackList'
+
+    # 设定结构体对应表格的字段
+    id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column('user_id', db.String(30))
+    booker_info = db.Column('booker_info', db.String(100))
+    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now())
     status = db.Column('status', db.INT, default=1)

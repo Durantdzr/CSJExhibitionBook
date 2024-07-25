@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from flask import request
 from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
-    get_available_open_day, get_book_available_openday
-from wxcloudrun.model import Book_Record, Exhibition_Open_Day
+    get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo
+from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import requests
 import logging
@@ -36,6 +36,9 @@ def book_record():
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
     record.openday = params.get("openday")
+    black=BlackList.query.filter(BlackList.status == 1, BlackList.booker_info==params.get("booker_info")).first()
+    if black is not None:
+        return make_err_response('该用户不可预约')
     available_num = get_book_available_bytype(params.get("book_type"), params.get("openday"))
     if int(available_num) >= int(params.get("book_num")):
         insert_book_record(record)
@@ -111,7 +114,7 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    if get_book_available() < 0 :
+    if get_book_available() < 0:
         return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(
@@ -154,3 +157,76 @@ def send_msg():
                            json=data)
 
     return make_succ_response(result.json())
+
+
+@app.route('/api/manage/get_total_book_record', methods=['GET'])
+def get_total_book_record():
+    """
+        :return:获取预约信息数据
+    """
+    wxOpenid = request.headers['X-WX-OPENID']
+    page = request.args.get('page', default=1, type=int)
+    page_size = request.args.get('page_size', default=10, type=int)
+    booker_name = request.args.get('booker_name', default=None)
+    openday = request.args.get('openday', default=None)
+    if booker_name is None and openday is None:
+        records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.booker_name.desc(),
+                                             Book_Record.booker_phone.desc()).paginate(page, per_page=page_size,
+                                                                                       error_out=False)
+    else:
+        filters = []
+        if booker_name is not None:
+            filters.append(Book_Record.booker_name == booker_name)
+        if openday is not None:
+            filters.append(Book_Record.openday == openday)
+        records = Book_Record.query.filter(*filters).order_by(Book_Record.openday.desc(),
+                                                              Book_Record.booker_name.desc(),
+                                                              Book_Record.booker_phone.desc()).paginate(page,
+                                                                                                        per_page=page_size,
+                                                                                                        error_out=False)
+    return make_succ_response([{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
+                                "book_type": record.book_type, "booker_phone": record.booker_phone,
+                                "book_time": record.book_time(), 'status': record.book_status()} for record in
+                               records.items])
+
+
+@app.route('/api/manage/create_blacklist', methods=['POST'])
+def create_blacklist():
+    """
+        :return:创建黑名单
+    """
+    # 获取请求体参数
+    params = request.get_json()
+    blacklist = BlackList()
+    blacklist.userid = request.headers['X-WX-OPENID']
+    blacklist.booker_info = params['booker_info']
+    insert_black_list(blacklist)
+    return make_succ_response(blacklist.id)
+
+
+@app.route('/api/manage/delete_blacklist', methods=['POST'])
+def delete_blacklist():
+    """
+        :return:删除黑名单
+    """
+    # 获取请求体参数
+    wxOpenid = request.headers['X-WX-OPENID']
+    params = request.get_json()
+    delete_blacklistbyinfo(params['booker_info'])
+    return make_succ_response(0)
+
+
+@app.route('/api/manage/get_blacklist', methods=['GET'])
+def get_blacklist():
+    wxOpenid = request.headers['X-WX-OPENID']
+    page = request.args.get('page', default=1, type=int)
+    page_size = request.args.get('page_size', default=10, type=int)
+    booker_info = request.args.get('booker_info', default='')
+    lists = BlackList.query.filter(BlackList.status==1,BlackList.booker_info.like('%' + booker_info + '%')).order_by(
+        BlackList.create_time.desc()).paginate(page,
+                                               per_page=page_size,
+                                               error_out=False)
+    return make_succ_response(
+        [{"booker_info": record.booker_info, "create_time": record.create_time.strftime('%Y年%m月%d日 %H:%M:%S')} for
+         record in
+         lists.items])

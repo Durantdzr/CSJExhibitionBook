@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.exc import OperationalError
 
 from wxcloudrun import db
-from wxcloudrun.model import Book_Record, Exhibition_Open_Day
+from wxcloudrun.model import Book_Record, Exhibition_Open_Day,BlackList
 from datetime import datetime, timedelta
 
 # 初始化日志
@@ -88,3 +88,28 @@ def get_available_open_day():
                                                 Exhibition_Open_Day.book_start_time <= datetime.now(),
                                                 Exhibition_Open_Day.book_end_time >= datetime.now()).all()
     return [item.openday.strftime('%Y-%m-%d') for item in opendays]
+
+
+def insert_black_list(blacklist):
+    """
+    插入一个Book_Record实体
+    :param counter: Counters实体
+    """
+    try:
+        db.session.add(blacklist)
+        db.session.commit()
+    except OperationalError as e:
+        logger.info("insert_counter errorMsg= {} ".format(e))
+
+def delete_blacklistbyinfo(booker_info):
+    """
+    :param id: Counter的ID
+    :return: Counter实体
+    """
+    try:
+        record = BlackList.query.filter(BlackList.booker_info == booker_info,BlackList.status==1).first()
+        record.status = 0
+        db.session.commit()
+    except OperationalError as e:
+        logger.info("query_counterbyid errorMsg= {} ".format(e))
+        return None
