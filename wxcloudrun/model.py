@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 
 from wxcloudrun import db
+import pytz
 
-
+tz = pytz.timezone('Asia/Shanghai')
 class Book_Record(db.Model):
     # 设置结构体表格名称
     __tablename__ = 'book_record'
@@ -10,11 +11,11 @@ class Book_Record(db.Model):
     # 设定结构体对应表格的字段
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column('user_id', db.String(30))
-    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now())
-    update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now())
+    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
+    update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
     book_type = db.Column('book_type', db.String(10), nullable=False, default='上午')
     book_mouth = db.Column('book_mouth', db.String(10), nullable=False)
-    openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now().strftime('%Y-%m-%d'))
+    openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz).strftime('%Y-%m-%d'))
     booker_name = db.Column('booker_name', db.String(100))
     booker_phone = db.Column('booker_phone', db.String(100))
     booker_info = db.Column('booker_info', db.String(100))
@@ -48,11 +49,11 @@ class Exhibition_Open_Day(db.Model):
     # 设定结构体对应表格的字段
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column('userid', db.String(30))
-    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now())
-    update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now())
+    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
+    update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
     book_start_time = db.Column('book_start_time', db.TIMESTAMP, nullable=False)
     book_end_time = db.Column('book_end_time', db.TIMESTAMP, nullable=False)
-    openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now().strftime('%Y-%m-%d'))
+    openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz).strftime('%Y-%m-%d'))
     people_AM = db.Column('people_AM', db.INT, default=20)
     people_PM = db.Column('people_PM', db.INT, default=30)
     begintime_AM = db.Column('begintime_AM', db.INT, default=9)
@@ -68,5 +69,5 @@ class BlackList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column('user_id', db.String(30))
     booker_info = db.Column('booker_info', db.String(100))
-    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now())
+    create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
     status = db.Column('status', db.INT, default=1)
