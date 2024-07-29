@@ -4,6 +4,8 @@ from wxcloudrun import db
 import pytz
 
 tz = pytz.timezone('Asia/Shanghai')
+
+
 class Book_Record(db.Model):
     # 设置结构体表格名称
     __tablename__ = 'book_record'
@@ -30,7 +32,7 @@ class Book_Record(db.Model):
         else:
             book_time_interval = {"上午": str(opentime.begintime_AM) + ":00-" + str(opentime.endtime_AM) + ":00",
                                   "下午": str(opentime.begintime_PM) + ":00-" + str(opentime.endtime_PM) + ":00"}
-        return self.openday.strftime('%Y-%m-%d') +" "+ book_time_interval.get(self.book_type, "")
+        return self.openday.strftime('%Y-%m-%d') + " " + book_time_interval.get(self.book_type, "")
 
     def book_status(self):
         book_time = datetime.strptime(self.book_mouth, "%Y-%m")
@@ -53,6 +55,7 @@ class Exhibition_Open_Day(db.Model):
     update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz))
     book_start_time = db.Column('book_start_time', db.TIMESTAMP, nullable=False)
     book_end_time = db.Column('book_end_time', db.TIMESTAMP, nullable=False)
+    openday_mouth = db.Column('openday_month', db.String(10), nullable=False)
     openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now(tz=tz).strftime('%Y-%m-%d'))
     people_AM = db.Column('people_AM', db.INT, default=20)
     people_PM = db.Column('people_PM', db.INT, default=30)
@@ -61,6 +64,8 @@ class Exhibition_Open_Day(db.Model):
     endtime_AM = db.Column('endtime_AM', db.INT, default=11)
     endtime_PM = db.Column('endtime_PM', db.INT, default=17)
     status = db.Column('status', db.INT, default=1)
+
+
 class BlackList(db.Model):
     # 设置结构体表格名称
     __tablename__ = 'blackList'

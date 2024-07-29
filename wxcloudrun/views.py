@@ -8,7 +8,9 @@ from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response, make_succ_page_response
 import requests
 import logging
+import pytz
 
+tz = pytz.timezone('Asia/Shanghai')
 # 初始化日志
 logger = logging.getLogger('log')
 
@@ -69,11 +71,9 @@ def get_book_record():
     """
         :return:我的预约记录列表
     """
-    # if datetime.now() > datetime(datetime.now().year, datetime.now().month, 28):
-    #     return make_succ_response([])
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
-                                       Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).all()
+                                       Book_Record.openday >= datetime.now(tz=tz).strftime("%Y-%m-%d")).all()
     result = []
     for record in records:
         result.append(
@@ -119,7 +119,7 @@ def get_user_book_enable():
         return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid).filter(
-        Book_Record.book_mouth == datetime.now().strftime('%Y-%m')).filter(Book_Record.status == 1).first()
+        Book_Record.book_mouth == datetime.now(tz=tz).strftime('%Y-%m')).filter(Book_Record.status == 1).first()
     if records is None:
         openday = get_available_open_day()
         if len(openday) > 0:
@@ -261,7 +261,7 @@ def update_openday():
     """
     # 获取请求体参数
     params = request.get_json()
-    id=update_opendaybyday(datetime.strptime(params['openday'], "%Y-%m-%d"), params)
+    id = update_opendaybyday(datetime.strptime(params['openday'], "%Y-%m-%d"), params)
 
     return make_succ_response(id)
 
@@ -275,3 +275,15 @@ def delete_openday():
     params = request.get_json()
     delete_opendaybyday(datetime.strptime(params['openday'], "%Y-%m-%d"))
     return make_succ_response(0)
+
+
+@app.route('/api/manage/get_openday_bymonth', methods=['GET'])
+def get_openday_bymonth():
+    """
+        :return:按月份预约日查询
+    """
+    # 获取请求体参数
+    openday_month = request.args.get('month', default=datetime.now(tz=tz))
+    list = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
+                                            Exhibition_Open_Day.openday_mouth == openday_month).all()
+    return make_succ_response([item.openday.strftime('%Y-%m-%d') for item in list])
