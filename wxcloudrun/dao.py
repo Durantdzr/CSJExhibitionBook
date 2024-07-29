@@ -63,7 +63,7 @@ def get_book_available_bytype(book_type, openday):
         available_num = openday_available.people_PM
     use_num = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
         Book_Record.status == 1, Book_Record.book_type == book_type, Book_Record.openday == openday).first()
-    if use_num is None:
+    if use_num[0] is None:
         return available_num
     else:
         return available_num - use_num[0]
