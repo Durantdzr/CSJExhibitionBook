@@ -34,7 +34,8 @@ def get_book_available():
 
         record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
             Book_Record.status == 1, Book_Record.openday == openday.openday).first()
-        use_num+=record.use_num
+        if record[0] is not None:
+            use_num+=record.use_num
     return available_num-use_num
 
 
