@@ -113,3 +113,46 @@ def delete_blacklistbyinfo(booker_info):
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
         return None
+
+def insert_openday(openday):
+    """
+    插入一个Book_Record实体
+    :param counter: Counters实体
+    """
+    try:
+        db.session.add(openday)
+        db.session.commit()
+    except OperationalError as e:
+        logger.info("insert_counter errorMsg= {} ".format(e))
+
+def update_opendaybyday(openday,dict):
+    """
+    根据ID查询Counter实体
+    :param id: Counter的ID
+    :return: Counter实体
+    """
+    try:
+        openday = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == openday,Exhibition_Open_Day.status==1).first()
+        openday.people_AM = dict['people_AM']
+        openday.people_PM = dict['people_PM']
+        openday.begintime_AM = dict['begintime_AM']
+        openday.begintime_PM = dict['begintime_PM']
+        openday.endtime_AM = dict['endtime_AM']
+        openday.endtime_PM = dict['endtime_PM']
+        db.session.commit()
+        return openday.id
+    except OperationalError as e:
+        logger.info("query_counterbyid errorMsg= {} ".format(e))
+        return None
+def delete_opendaybyday(openday):
+    """
+    :param id: Counter的ID
+    :return: Counter实体
+    """
+    try:
+        record = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == openday,Exhibition_Open_Day.status==1).first()
+        record.status = 0
+        db.session.commit()
+    except OperationalError as e:
+        logger.info("query_counterbyid errorMsg= {} ".format(e))
+        return None

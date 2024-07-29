@@ -2,9 +2,10 @@ from datetime import datetime, timedelta
 from flask import request
 from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
-    get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo
+    get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo, insert_openday, \
+    update_opendaybyday, delete_opendaybyday
 from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList
-from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response,make_succ_page_response
+from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response, make_succ_page_response
 import requests
 import logging
 
@@ -36,7 +37,7 @@ def book_record():
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
     record.openday = params.get("openday")
-    black=BlackList.query.filter(BlackList.status == 1, BlackList.booker_info==params.get("booker_info")).first()
+    black = BlackList.query.filter(BlackList.status == 1, BlackList.booker_info == params.get("booker_info")).first()
     if black is not None:
         return make_err_response('该用户不可预约')
     available_num = get_book_available_bytype(params.get("book_type"), params.get("openday"))
@@ -184,10 +185,11 @@ def get_total_book_record():
                                                               Book_Record.booker_phone.desc()).paginate(page,
                                                                                                         per_page=page_size,
                                                                                                         error_out=False)
-    return make_succ_page_response(data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
-                                "book_type": record.book_type, "booker_phone": record.booker_phone,
-                                "book_time": record.book_time(), 'status': record.book_status()} for record in
-                               records.items],total=records.total)
+    return make_succ_page_response(
+        data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
+               "book_type": record.book_type, "booker_phone": record.booker_phone,
+               "book_time": record.book_time(), 'status': record.book_status()} for record in
+              records.items], total=records.total)
 
 
 @app.route('/api/manage/create_blacklist', methods=['POST'])
@@ -222,7 +224,7 @@ def get_blacklist():
     page = request.args.get('page', default=1, type=int)
     page_size = request.args.get('page_size', default=10, type=int)
     booker_info = request.args.get('booker_info', default='')
-    lists = BlackList.query.filter(BlackList.status==1,BlackList.booker_info.like('%' + booker_info + '%')).order_by(
+    lists = BlackList.query.filter(BlackList.status == 1, BlackList.booker_info.like('%' + booker_info + '%')).order_by(
         BlackList.create_time.desc()).paginate(page,
                                                per_page=page_size,
                                                error_out=False)
@@ -230,3 +232,46 @@ def get_blacklist():
         [{"booker_info": record.booker_info, "create_time": record.create_time.strftime('%Y年%m月%d日 %H:%M:%S')} for
          record in
          lists.items])
+
+
+@app.route('/api/manage/create_openday', methods=['POST'])
+def create_openday():
+    """
+        :return:创建预约开放日
+    """
+    # 获取请求体参数
+    params = request.get_json()
+    openday = Exhibition_Open_Day()
+    openday.userid = request.headers['X-WX-OPENID']
+    openday.openday = datetime.strptime(params['openday'], "%Y-%m-%d")
+    openday.people_AM = params['people_AM']
+    openday.people_PM = params['people_PM']
+    openday.begintime_AM = params['begintime_AM']
+    openday.begintime_PM = params['begintime_PM']
+    openday.endtime_AM = params['endtime_AM']
+    openday.endtime_PM = params['endtime_PM']
+    insert_openday(openday)
+    return make_succ_response(openday.id)
+
+
+@app.route('/api/manage/update_openday', methods=['POST'])
+def update_openday():
+    """
+        :return:创建预约开放日
+    """
+    # 获取请求体参数
+    params = request.get_json()
+    id=update_opendaybyday(datetime.strptime(params['openday'], "%Y-%m-%d"), params)
+
+    return make_succ_response(id)
+
+
+@app.route('/api/manage/delete_openday', methods=['POST'])
+def delete_openday():
+    """
+        :return:删除预约开放日
+    """
+    # 获取请求体参数
+    params = request.get_json()
+    delete_opendaybyday(datetime.strptime(params['openday'], "%Y-%m-%d"))
+    return make_succ_response(0)
