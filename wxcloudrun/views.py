@@ -56,7 +56,8 @@ def get_book_history():
         :return:历史预约记录列表
     """
     userid = request.headers['X-WX-OPENID']
-    records = Book_Record.query.filter(Book_Record.userid == userid).all()
+    records = Book_Record.query.filter(Book_Record.userid == userid,
+                                       Book_Record.openday <= datetime.now().strftime('%Y-%m-%d')).all()
     result = []
     for record in records:
         result.append(
@@ -118,8 +119,8 @@ def get_user_book_enable():
     if get_book_available() < 0:
         return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
-    records = Book_Record.query.filter(Book_Record.userid == userid).filter(
-        Book_Record.book_mouth == datetime.now(tz=tz).strftime('%Y-%m')).filter(Book_Record.status == 1).first()
+    records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
+                                       Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).first()
     if records is None:
         openday = get_available_open_day()
         if len(openday) > 0:
@@ -287,3 +288,21 @@ def get_openday_bymonth():
     list = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                             Exhibition_Open_Day.openday_mouth == openday_month).all()
     return make_succ_response([item.openday.strftime('%Y-%m-%d') for item in list])
+
+
+@app.route('/api/manage/get_openday_byday', methods=['GET'])
+def get_openday_byday():
+    """
+        :return:按预约日查询已编辑信息
+    """
+    # 获取请求体参数
+    openday = request.args.get('openday', default=datetime.now(tz=tz).strftime('%Y-%m-%d'))
+    info = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
+                                            Exhibition_Open_Day.openday == openday).first()
+    if info is None:
+        return make_err_response(
+            {"people_AM": 20, "people_PM": 30, "begintime_AM": 9, "begintime_PM": 13, "endtime_AM": 11,
+             "endtime_PM": 17})
+    return make_succ_response(
+        {"people_AM": info.people_AM, "people_PM": info.people_PM, "begintime_AM": info.begintime_AM,
+         "begintime_PM": info.begintime_PM, "endtime_AM": info.endtime_AM, "endtime_PM": info.endtime_PM})
