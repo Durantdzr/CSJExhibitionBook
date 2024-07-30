@@ -172,7 +172,7 @@ def get_total_book_record():
     booker_name = request.args.get('booker_name', default=None)
     openday = request.args.get('openday', default=None)
     if booker_name is None and openday is None:
-        records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.booker_name.desc(),
+        records = Book_Record.query.order_by(Book_Record.openday.desc(),Book_Record.book_type.asc(), Book_Record.booker_name.desc(),
                                              Book_Record.booker_phone.desc()).paginate(page, per_page=page_size,
                                                                                        error_out=False)
     else:
@@ -181,11 +181,14 @@ def get_total_book_record():
             filters.append(Book_Record.booker_name == booker_name)
         if openday is not None:
             filters.append(Book_Record.openday == openday)
-        records = Book_Record.query.filter(*filters).order_by(Book_Record.openday.desc(),
-                                                              Book_Record.booker_name.desc(),
-                                                              Book_Record.booker_phone.desc()).paginate(page,
-                                                                                                        per_page=page_size,
-                                                                                                        error_out=False)
+        records = Book_Record.query.filter(*filters).order_by(
+            Book_Record.openday.desc(),
+            Book_Record.book_type.asc(),
+            Book_Record.booker_name.desc(),
+            Book_Record.booker_phone.desc(),
+        ).paginate(page,
+                   per_page=page_size,
+                   error_out=False)
     return make_succ_page_response(
         data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
                "book_type": record.book_type, "booker_phone": record.booker_phone,
