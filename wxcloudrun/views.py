@@ -283,7 +283,7 @@ def get_openday_bymonth():
         :return:按月份预约日查询
     """
     # 获取请求体参数
-    openday_month = request.args.get('month', default=datetime.now(tz=tz))
+    openday_month = request.args.get('month', default=datetime.now(tz=tz).strftime('%Y-%m'))
     list = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                             Exhibition_Open_Day.openday_mouth == openday_month).all()
     return make_succ_response([item.openday.strftime('%Y-%m-%d') for item in list])
