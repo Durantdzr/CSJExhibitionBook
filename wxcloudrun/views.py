@@ -9,6 +9,7 @@ from wxcloudrun.response import make_succ_empty_response, make_succ_response, ma
 import requests
 import logging
 import pytz
+from sqlalchemy import or_, and_
 
 tz = pytz.timezone('Asia/Shanghai')
 # 初始化日志
@@ -56,8 +57,9 @@ def get_book_history():
         :return:历史预约记录列表
     """
     userid = request.headers['X-WX-OPENID']
-    records = Book_Record.query.filter(Book_Record.userid == userid,
-                                       Book_Record.openday <= datetime.now().strftime('%Y-%m-%d')).all()
+    records = Book_Record.query.filter(or_(and_(Book_Record.userid == userid, Book_Record.status == 0),
+                                           and_(Book_Record.userid == userid,
+                                                Book_Record.openday == datetime.now().strftime('%Y-%m-%d')))).all()
     result = []
     for record in records:
         result.append(
@@ -172,7 +174,8 @@ def get_total_book_record():
     booker_name = request.args.get('booker_name', default=None)
     openday = request.args.get('openday', default=None)
     if booker_name is None and openday is None:
-        records = Book_Record.query.order_by(Book_Record.openday.desc(),Book_Record.book_type.asc(), Book_Record.booker_name.desc(),
+        records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.book_type.asc(),
+                                             Book_Record.booker_name.desc(),
                                              Book_Record.booker_phone.desc()).paginate(page, per_page=page_size,
                                                                                        error_out=False)
     else:
@@ -203,6 +206,9 @@ def create_blacklist():
     """
     # 获取请求体参数
     params = request.get_json()
+    result = BlackList.query.filter(BlackList.booker_info == params['booker_info'], BlackList.status == 1).first()
+    if result is not None:
+        return make_err_response('该用户已在黑名单中')
     blacklist = BlackList()
     blacklist.userid = request.headers['X-WX-OPENID']
     blacklist.booker_info = params['booker_info']
