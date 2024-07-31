@@ -9,6 +9,8 @@ from wxcloudrun.response import make_succ_empty_response, make_succ_response, ma
 import requests
 import logging
 import pytz
+from dateutil.relativedelta import relativedelta
+from wxcloudrun import db
 from sqlalchemy import or_, and_
 
 tz = pytz.timezone('Asia/Shanghai')
@@ -123,7 +125,7 @@ def get_user_book_enable():
     userid = request.headers['X-WX-OPENID']
     # records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
     #                                    Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).first()\
-    records=None
+    records = None
     if records is None:
         openday = get_available_open_day()
         if len(openday) > 0:
@@ -316,3 +318,68 @@ def get_openday_byday():
     return make_succ_response(
         {"people_AM": info.people_AM, "people_PM": info.people_PM, "begintime_AM": info.begintime_AM,
          "begintime_PM": info.begintime_PM, "endtime_AM": info.endtime_AM, "endtime_PM": info.endtime_PM})
+
+
+@app.route('/api/manage/get_book_statistics', methods=['GET'])
+def get_book_statistics():
+    """
+        :return:预约信息统计
+    """
+    # 获取请求体参数
+    begintime = request.args.get('begintime', default=datetime.now(tz=tz).strftime('%Y-%m-%d'))
+    type = request.args.get('type', default='month')
+    interval = request.args.get('interval', default=5, type=int)
+    data = []
+    if type == 'month':
+        result = Book_Record.query.with_entities(Book_Record.book_type, Book_Record.book_mouth,
+                                                 db.func.sum(Book_Record.book_num).label('use_num')).filter(
+            Book_Record.status == 1,
+            Book_Record.book_mouth <= datetime.strptime(begintime, '%Y-%m-%d').strftime('%Y-%m'),
+            Book_Record.book_mouth >= (
+                    datetime.strptime(begintime, '%Y-%m-%d') - relativedelta(months=interval)).strftime(
+                '%Y-%m')).group_by(Book_Record.book_type, Book_Record.book_mouth).all()
+        for month_interval in range(interval, -1, -1):
+            month_data = {'name': '近' + str(month_interval) + '月' if month_interval > 0 else '本月', "上午": 0,
+                          "下午": 0}
+            for item in result:
+                if item[1] == (
+                        datetime.strptime(begintime, '%Y-%m-%d') - relativedelta(months=month_interval)).strftime(
+                    '%Y-%m'):
+                    month_data[item[0]] += int(item[2])
+            data.append(month_data)
+    if type == 'day':
+        result = Book_Record.query.with_entities(Book_Record.book_type, Book_Record.openday,
+                                                 db.func.sum(Book_Record.book_num).label('use_num')).filter(
+            Book_Record.status == 1, Book_Record.openday <= datetime.strptime(begintime, '%Y-%m-%d'),
+            Book_Record.openday >= datetime.strptime(begintime, '%Y-%m-%d') - timedelta(days=interval)).group_by(
+            Book_Record.book_type, Book_Record.openday).all()
+        for day_interval in range(interval, -1, -1):
+            day_data = {'name': '近' + str(day_interval) + '天' if day_interval > 0 else '本日', "上午": 0,
+                        "下午": 0}
+            for item in result:
+                if item[1] == datetime.strptime(begintime, '%Y-%m-%d') - timedelta(days=day_interval):
+                    day_data[item[0]] += int(item[2])
+            data.append(day_data)
+    if type == 'week':
+        result = Book_Record.query.with_entities(Book_Record.book_type, Book_Record.book_week,
+                                                 db.func.sum(Book_Record.book_num).label('use_num')).filter(
+            Book_Record.status == 1,
+            Book_Record.book_week <= datetime.strptime(begintime, '%Y-%m-%d').strftime('%Y-%U'),
+            Book_Record.book_week >= (
+                    datetime.strptime(begintime, '%Y-%m-%d') - relativedelta(weeks=interval)).strftime(
+                '%Y-%U')).group_by(Book_Record.book_type, Book_Record.book_week).all()
+        for week_interval in range(interval, -1, -1):
+            month_data = {'name': '近' + str(week_interval) + '周' if week_interval > 0 else '本周', "上午": 0,
+                          "下午": 0}
+            for item in result:
+                if item[1] == (
+                        datetime.strptime(begintime, '%Y-%m-%d') - relativedelta(weeks=week_interval)).strftime(
+                    '%Y-%U'):
+                    month_data[item[0]] += int(item[2])
+            data.append(month_data)
+    for item in data:
+        item['AM'] = item['上午']
+        item['PM'] = item['下午']
+        del item['上午']
+        del item['下午']
+    return make_succ_response(data)
