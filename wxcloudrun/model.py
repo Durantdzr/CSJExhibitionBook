@@ -17,6 +17,7 @@ class Book_Record(db.Model):
     update_time = db.Column('update_time', db.TIMESTAMP, nullable=False, default=datetime.now)
     book_type = db.Column('book_type', db.String(10), nullable=False, default='上午')
     book_mouth = db.Column('book_mouth', db.String(10), nullable=False)
+    book_week = db.Column('book_week', db.String(10), nullable=False)
     openday = db.Column('openday', db.TIMESTAMP, nullable=False, default=datetime.now().strftime('%Y-%m-%d'))
     booker_name = db.Column('booker_name', db.String(100))
     booker_phone = db.Column('booker_phone', db.String(100))
