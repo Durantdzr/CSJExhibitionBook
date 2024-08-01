@@ -160,7 +160,7 @@ def delete_opendaybyday(openday):
         for record in records:
             record.status=0
             send_cancel_msg(record.user_id,record.openday.strftime('%Y年%m月%d日'))
-        db.session.commit()
+            db.session.commit()
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
         return None
