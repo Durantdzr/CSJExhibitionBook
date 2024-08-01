@@ -159,7 +159,7 @@ def delete_opendaybyday(openday):
         records=Book_Record.query.filter(Book_Record.openday==openday,Book_Record.status==1).all()
         for record in records:
             record.status=0
-            send_cancel_msg(record.user_id,record.openday.strftime('%Y年%m月%d日'))
+            send_cancel_msg(record.userid,record.openday.strftime('%Y年%m月%d日'))
             db.session.commit()
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
@@ -186,3 +186,4 @@ def send_cancel_msg(openid,openday):
 
     result = requests.post('http://api.weixin.qq.com/cgi-bin/message/subscribe/send', params={"openid": openid},
                            json=data)
+    logger.info(result.json())
