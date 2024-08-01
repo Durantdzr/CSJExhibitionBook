@@ -4,7 +4,7 @@ from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
     get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo, insert_openday, \
     update_opendaybyday, delete_opendaybyday
-from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList
+from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList,Manager
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response, make_succ_page_response
 import requests
 import logging
@@ -304,6 +304,18 @@ def get_openday_bymonth():
                                             Exhibition_Open_Day.openday_mouth == openday_month).all()
     return make_succ_response([item.openday.strftime('%Y-%m-%d') for item in list])
 
+@app.route('/api/manage/privilege', methods=['GET'])
+def get_manager_privilege():
+    """
+        :return:按月份预约日查询
+    """
+    # 获取请求体参数
+    userid = request.headers['X-WX-OPENID']
+    result=Manager.query.filter(Manager.userid ==userid).first()
+    if result is not None:
+        return make_succ_response(True)
+    else:
+        return make_succ_response(False)
 
 @app.route('/api/manage/get_openday_byday', methods=['GET'])
 def get_openday_byday():

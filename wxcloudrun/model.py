@@ -77,3 +77,10 @@ class BlackList(db.Model):
     booker_info = db.Column('booker_info', db.String(100))
     create_time = db.Column('create_time', db.TIMESTAMP, nullable=False, default=datetime.now)
     status = db.Column('status', db.INT, default=1)
+class Manager(db.Model):
+    # 设置结构体表格名称
+    __tablename__ = 'manager'
+
+    # 设定结构体对应表格的字段
+    id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column('user_id', db.String(30))
