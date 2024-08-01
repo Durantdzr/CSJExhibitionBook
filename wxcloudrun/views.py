@@ -144,16 +144,19 @@ def send_msg():
     wxOpenid = request.headers['X-WX-OPENID']
     data = {
         "touser": userid.get("openid"),
-        "template_id": "MzOVSb0bt7cnU6zp_xOWNCDni7OrsjG5dJjVgI_teAg",
+        "template_id": "YD4H4lqbmqQ2KsnpXQT-rJqfdEkC0CKgQzSXyn3rDrc",
         "data": {
-            "time1": {
-                "value": "2019年10月1日"
-            },
-            "thing5": {
+            "thing1": {
                 "value": "长三角示范区展览馆"
             },
-            "thing9": {
-                "value": "您预定的参观申请因故取消，敬请谅解。"
+            "time2": {
+                "value": "2020年4月15日"
+            },
+            "time3": {
+                "value": "9:00-14:00"
+            },
+            "thing4": {
+                "value": "您的预约因故自动更换参观时段，敬请谅解"
             }
         },
         "miniprogram_state": "trial",

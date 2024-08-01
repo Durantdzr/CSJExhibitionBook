@@ -5,7 +5,7 @@ from sqlalchemy.exc import OperationalError
 from wxcloudrun import db
 from wxcloudrun.model import Book_Record, Exhibition_Open_Day,BlackList
 from datetime import datetime, timedelta
-
+import requests
 # 初始化日志
 logger = logging.getLogger('log')
 
@@ -154,6 +154,32 @@ def delete_opendaybyday(openday):
         record = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == openday,Exhibition_Open_Day.status==1).first()
         record.status = 0
         db.session.commit()
+        records=Book_Record.query.filter(Book_Record.openday==openday).all()
+        for record in records:
+            send_cancel_msg(record.user_id,record.openday.strftime('%Y年%m月%d日'))
+
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
         return None
+
+def send_cancel_msg(openid,openday):
+    data = {
+        "touser": openid,
+        "template_id": "MzOVSb0bt7cnU6zp_xOWNCDni7OrsjG5dJjVgI_teAg",
+        "data": {
+            "time1": {
+                "value": openday
+            },
+            "thing5": {
+                "value": "长三角示范区展览馆"
+            },
+            "thing9": {
+                "value": "您预定的参观申请因故取消，敬请谅解。"
+            }
+        },
+        "miniprogram_state": "trial",
+        "lang": "zh_CN"
+    }
+
+    result = requests.post('http://api.weixin.qq.com/cgi-bin/message/subscribe/send', params={"openid": openid},
+                           json=data)
