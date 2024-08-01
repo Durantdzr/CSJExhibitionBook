@@ -42,7 +42,7 @@ class Book_Record(db.Model):
         elif datetime.now() >= self.openday + timedelta(days=1):
             return '已出行'
         else:
-            return '未出行'
+            return '已预约'
 
 
 class Exhibition_Open_Day(db.Model):
