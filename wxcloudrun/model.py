@@ -29,10 +29,10 @@ class Book_Record(db.Model):
         opentime = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == self.openday,
                                                     Exhibition_Open_Day.status == 1).first()
         if opentime is None:
-            book_time_interval = {"上午": "09:00-11:00", "下午": "13:00-17:00"}
+            book_time_interval = {"上午": "09:00~11:00", "下午": "13:00~17:00"}
         else:
-            book_time_interval = {"上午": str(opentime.begintime_AM) + ":00-" + str(opentime.endtime_AM) + ":00",
-                                  "下午": str(opentime.begintime_PM) + ":00-" + str(opentime.endtime_PM) + ":00"}
+            book_time_interval = {"上午": str(opentime.begintime_AM) + ":00~" + str(opentime.endtime_AM) + ":00",
+                                  "下午": str(opentime.begintime_PM) + ":00~" + str(opentime.endtime_PM) + ":00"}
         return self.openday.strftime('%Y-%m-%d') + " " + book_time_interval.get(self.book_type, "")
 
     def book_status(self):
