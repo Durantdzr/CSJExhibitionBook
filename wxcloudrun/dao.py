@@ -89,10 +89,14 @@ def delete_bookbyid(id):
 
 
 def get_available_open_day():
+    data=[]
     opendays = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                                 Exhibition_Open_Day.book_start_time <= datetime.now(),
                                                 Exhibition_Open_Day.book_end_time >= datetime.now()).all()
-    return [item.openday.strftime('%Y-%m-%d') for item in opendays]
+    for item in opendays:
+        if get_book_available_bytype('上午',item.openday)+get_book_available_bytype('下午',item.openday)>0:
+            data.append(item)
+    return [item.openday.strftime('%Y-%m-%d') for item in data]
 
 
 def insert_black_list(blacklist):
