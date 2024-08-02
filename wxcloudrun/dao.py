@@ -133,7 +133,7 @@ def insert_openday(openday):
         logger.info("insert_counter errorMsg= {} ".format(e))
 
 
-def update_opendaybyday(openday, dict):
+def update_opendaybyday(Openday, dict):
     """
     根据ID查询Counter实体
     :param id: Counter的ID
@@ -142,7 +142,7 @@ def update_opendaybyday(openday, dict):
     try:
         flag_am = 0
         flag_pm = 0
-        openday = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == openday,
+        openday = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.openday == Openday,
                                                    Exhibition_Open_Day.status == 1).first()
 
         openday.people_AM = dict['people_AM']
@@ -157,13 +157,13 @@ def update_opendaybyday(openday, dict):
         openday.endtime_PM = dict['endtime_PM']
         db.session.commit()
         if flag_am == 1:
-            records = Book_Record.query.filter(Book_Record.openday == openday, Book_Record.status == 1,
+            records = Book_Record.query.filter(Book_Record.openday == Openday, Book_Record.status == 1,
                                                Book_Record.book_type == '上午').all()
             for record in records:
                 send_change_msg(record.userid, record.openday.strftime('%Y年%m月%d日'),
                                 str(openday.begintime_AM) + ":00~" + str(openday.endtime_AM) + ":00")
         if flag_pm == 1:
-            records = Book_Record.query.filter(Book_Record.openday == openday, Book_Record.status == 1,
+            records = Book_Record.query.filter(Book_Record.openday == Openday, Book_Record.status == 1,
                                                Book_Record.book_type == '下午').all()
             for record in records:
                 send_change_msg(record.userid, record.openday.strftime('%Y年%m月%d日'),
