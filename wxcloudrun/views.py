@@ -97,7 +97,8 @@ def delete_record():
     # 获取请求体参数
     params = request.get_json()
 
-    delete_bookbyid(params.get("id"))
+    if not delete_bookbyid(params.get("id")):
+        return make_err_response('本时段不可取消预约')
     return make_succ_response(0)
 
 

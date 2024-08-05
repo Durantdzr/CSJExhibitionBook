@@ -81,8 +81,11 @@ def delete_bookbyid(id):
     """
     try:
         record = Book_Record.query.filter(Book_Record.id == id).first()
-        record.status = 0
-        db.session.commit()
+        if record.openday.strftime('%Y-%m-%d')==datetime.now().strftime('%Y-%m-%d'):
+            return False
+        else:
+            record.status = 0
+            db.session.commit()
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
         return None
