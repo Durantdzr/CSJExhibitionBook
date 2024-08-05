@@ -36,13 +36,16 @@ class Book_Record(db.Model):
         return self.openday.strftime('%Y-%m-%d') + " " + book_time_interval.get(self.book_type, "")
 
     def book_status(self):
-        book_time = datetime.strptime(self.book_mouth, "%Y-%m")
+        # book_time = datetime.strptime(self.book_mouth, "%Y-%m")
         if self.status == 0:
             return '已取消'
         elif datetime.now() >= self.openday + timedelta(days=1):
             return '已出行'
         else:
             return '已预约'
+    def info_secret(self):
+        return self.booker_info[:8]+'*'*4+self.booker_info[11:]
+
 
 
 class Exhibition_Open_Day(db.Model):

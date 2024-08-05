@@ -84,7 +84,7 @@ def get_book_record():
         result.append(
             {"id": record.id, "booker_name": record.booker_name, "book_time": record.book_time(),
              "book_mouth": record.book_mouth, "book_type": record.book_type, "book_num": record.book_num,
-             'status': record.book_status()})
+             'status': record.book_status(),"booker_info": record.booker_info,'booker_secret_info':record.info_secret()})
     return make_succ_response(result)
 
 
