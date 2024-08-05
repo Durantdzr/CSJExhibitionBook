@@ -121,7 +121,7 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    if get_book_available() < 0:
+    if get_book_available() <= 0:
         return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
