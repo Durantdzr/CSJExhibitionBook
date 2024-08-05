@@ -128,11 +128,11 @@ def get_user_book_enable():
                                        Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).first()
     # records = None
     if records is None:
-        openday = get_available_open_day()
-        available, opendays = get_book_available()
-        if available <= 0 and len(opendays) > 0:
-            return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
-        if len(openday) > 0:
+        # openday = get_available_open_day()
+        available, opendays,openday = get_book_available()
+        if len(opendays) > 0:
+            if available <= 0:
+                return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
             return make_succ_response({"status": 1, "openday": openday})
         else:
             return make_err_response({"status": 0, "msg": "当前时段无可预约开放日"})

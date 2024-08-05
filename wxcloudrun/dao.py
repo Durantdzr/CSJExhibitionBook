@@ -25,26 +25,34 @@ def insert_book_record(book_record):
 
 def get_book_available():
     available_num = 0
+    data = []
     opendays = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                                 Exhibition_Open_Day.book_start_time <= datetime.now(),
                                                 Exhibition_Open_Day.book_end_time >= datetime.now()).all()
     for openday in opendays:
+        flag = 0
         record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
-            Book_Record.status == 1, Book_Record.openday == openday.openday,Book_Record.book_type=='上午').first()
+            Book_Record.status == 1, Book_Record.openday == openday.openday, Book_Record.book_type == '上午').first()
         if record[0] is not None:
             if record.use_num < openday.people_AM:
-                available_num+=(openday.people_AM-record.use_num)
+                flag = 1
+                available_num += (openday.people_AM - record.use_num)
         else:
-            available_num+=openday.people_AM
+            flag = 1
+            available_num += openday.people_AM
         record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
-                Book_Record.status == 1, Book_Record.openday == openday.openday,
-                Book_Record.book_type == '下午').first()
+            Book_Record.status == 1, Book_Record.openday == openday.openday,
+            Book_Record.book_type == '下午').first()
         if record[0] is not None:
             if record.use_num < openday.people_PM:
+                flag = 1
                 available_num += (openday.people_PM - record.use_num)
         else:
+            flag = 1
             available_num += openday.people_PM
-    return available_num,opendays
+        if flag:
+            data.append(openday)
+    return available_num, opendays,data
 
 
 def get_book_available_openday(openday=datetime.now().strftime('%Y-%m-%d')):
@@ -88,7 +96,7 @@ def delete_bookbyid(id):
     """
     try:
         record = Book_Record.query.filter(Book_Record.id == id).first()
-        if record.openday.strftime('%Y-%m-%d')==datetime.now().strftime('%Y-%m-%d'):
+        if record.openday.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d'):
             return False
         else:
             record.status = 0
@@ -100,12 +108,12 @@ def delete_bookbyid(id):
 
 
 def get_available_open_day():
-    data=[]
+    data = []
     opendays = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                                 Exhibition_Open_Day.book_start_time <= datetime.now(),
                                                 Exhibition_Open_Day.book_end_time >= datetime.now()).all()
     for item in opendays:
-        if get_book_available_bytype('上午',item.openday)+get_book_available_bytype('下午',item.openday)>0:
+        if get_book_available_bytype('上午', item.openday) + get_book_available_bytype('下午', item.openday) > 0:
             data.append(item)
     return [item.openday.strftime('%Y-%m-%d') for item in data]
 
