@@ -155,9 +155,9 @@ def update_opendaybyday(Openday, dict):
 
         openday.people_AM = dict['people_AM']
         openday.people_PM = dict['people_PM']
-        if openday.endtime_AM != dict['endtime_AM'] or openday.begintime_AM != dict['begintime_AM']:
+        if openday.endtime_AM != int(dict['endtime_AM']) or openday.begintime_AM != int(dict['begintime_AM']):
             flag_am = 1
-        if openday.endtime_PM != dict['endtime_PM'] or openday.begintime_PM != dict['begintime_PM']:
+        if openday.endtime_PM != int(dict['endtime_PM']) or openday.begintime_PM != int(dict['begintime_PM']):
             flag_pm = 1
         openday.begintime_AM = dict['begintime_AM']
         openday.begintime_PM = dict['begintime_PM']
