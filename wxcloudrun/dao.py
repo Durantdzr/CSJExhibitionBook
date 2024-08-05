@@ -86,6 +86,7 @@ def delete_bookbyid(id):
         else:
             record.status = 0
             db.session.commit()
+            return True
     except OperationalError as e:
         logger.info("query_counterbyid errorMsg= {} ".format(e))
         return None
