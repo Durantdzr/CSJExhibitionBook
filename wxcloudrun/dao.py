@@ -44,7 +44,7 @@ def get_book_available():
                 available_num += (openday.people_PM - record.use_num)
         else:
             available_num += openday.people_PM
-    return available_num
+    return available_num,opendays
 
 
 def get_book_available_openday(openday=datetime.now().strftime('%Y-%m-%d')):
