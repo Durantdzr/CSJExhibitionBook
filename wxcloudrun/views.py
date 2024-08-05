@@ -122,15 +122,16 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    available,opendays=get_book_available()
-    if available <= 0 and len(opendays)>0:
-        return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
+
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
                                        Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).first()
     # records = None
     if records is None:
         openday = get_available_open_day()
+        available, opendays = get_book_available()
+        if available <= 0 and len(opendays) > 0:
+            return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
         if len(openday) > 0:
             return make_succ_response({"status": 1, "openday": openday})
         else:
