@@ -25,19 +25,22 @@ def insert_book_record(book_record):
 
 def get_book_available():
     available_num = 0
-    use_num = 0
     opendays = Exhibition_Open_Day.query.filter(Exhibition_Open_Day.status == 1,
                                                 Exhibition_Open_Day.book_start_time <= datetime.now(),
                                                 Exhibition_Open_Day.book_end_time >= datetime.now()).all()
     for openday in opendays:
-        available_num += openday.people_AM
-        available_num += openday.people_PM
-
         record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
-            Book_Record.status == 1, Book_Record.openday == openday.openday).first()
+            Book_Record.status == 1, Book_Record.openday == openday.openday,Book_Record.book_type=='上午').first()
         if record[0] is not None:
-            use_num += record.use_num
-    return available_num - use_num
+            if record.use_num < openday.people_AM:
+                available_num+=(openday.people_AM-record.use_num)
+        record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
+                Book_Record.status == 1, Book_Record.openday == openday.openday,
+                Book_Record.book_type == '下午').first()
+        if record[0] is not None:
+            if record.use_num < openday.people_PM:
+                available_num += (openday.people_PM - record.use_num)
+    return available_num
 
 
 def get_book_available_openday(openday=datetime.now().strftime('%Y-%m-%d')):
