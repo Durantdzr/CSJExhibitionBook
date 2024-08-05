@@ -34,12 +34,16 @@ def get_book_available():
         if record[0] is not None:
             if record.use_num < openday.people_AM:
                 available_num+=(openday.people_AM-record.use_num)
+        else:
+            available_num+=openday.people_AM
         record = Book_Record.query.with_entities(db.func.sum(Book_Record.book_num).label('use_num')).filter(
                 Book_Record.status == 1, Book_Record.openday == openday.openday,
                 Book_Record.book_type == '下午').first()
         if record[0] is not None:
             if record.use_num < openday.people_PM:
                 available_num += (openday.people_PM - record.use_num)
+        else:
+            available_num += openday.people_PM
     return available_num
 
 

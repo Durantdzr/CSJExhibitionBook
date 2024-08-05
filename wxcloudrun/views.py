@@ -4,7 +4,7 @@ from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
     get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo, insert_openday, \
     update_opendaybyday, delete_opendaybyday
-from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList,Manager
+from wxcloudrun.model import Book_Record, Exhibition_Open_Day, BlackList, Manager
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response, make_succ_page_response
 import requests
 import logging
@@ -84,7 +84,8 @@ def get_book_record():
         result.append(
             {"id": record.id, "booker_name": record.booker_name, "book_time": record.book_time(),
              "book_mouth": record.book_mouth, "book_type": record.book_type, "book_num": record.book_num,
-             'status': record.book_status(),"booker_info": record.booker_info,'booker_secret_info':record.info_secret()})
+             'status': record.book_status(), "booker_info": record.booker_info,
+             'booker_secret_info': record.info_secret()})
     return make_succ_response(result)
 
 
@@ -121,8 +122,6 @@ def get_user_book_enable():
     """
         :return:获取用户预约状态
     """
-    if get_book_available() <= 0:
-        return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
     userid = request.headers['X-WX-OPENID']
     records = Book_Record.query.filter(Book_Record.userid == userid, Book_Record.status == 1,
                                        Book_Record.openday >= datetime.now().strftime("%Y-%m-%d")).first()
@@ -130,6 +129,8 @@ def get_user_book_enable():
     if records is None:
         openday = get_available_open_day()
         if len(openday) > 0:
+            if get_book_available() <= 0:
+                return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
             return make_succ_response({"status": 1, "openday": openday})
         else:
             return make_err_response({"status": 0, "msg": "当前时段无可预约开放日"})
@@ -305,6 +306,7 @@ def get_openday_bymonth():
                                             Exhibition_Open_Day.openday_mouth == openday_month).all()
     return make_succ_response([item.openday.strftime('%Y-%m-%d') for item in list])
 
+
 @app.route('/api/manage/privilege', methods=['GET'])
 def get_manager_privilege():
     """
@@ -312,11 +314,12 @@ def get_manager_privilege():
     """
     # 获取请求体参数
     userid = request.headers['X-WX-OPENID']
-    result=Manager.query.filter(Manager.userid ==userid).first()
+    result = Manager.query.filter(Manager.userid == userid).first()
     if result is not None:
         return make_succ_response(True)
     else:
         return make_succ_response(False)
+
 
 @app.route('/api/manage/get_openday_byday', methods=['GET'])
 def get_openday_byday():
