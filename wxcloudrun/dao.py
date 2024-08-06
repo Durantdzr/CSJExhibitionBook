@@ -51,7 +51,7 @@ def get_book_available():
             flag = 1
             available_num += openday.people_PM
         if flag:
-            data.append(openday)
+            data.append(openday.openday.strftime('%Y-%m-%d'))
     return available_num, opendays,data
 
 
