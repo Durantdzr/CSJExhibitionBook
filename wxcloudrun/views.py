@@ -205,7 +205,7 @@ def get_total_book_record():
     return make_succ_page_response(
         data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
                "book_type": record.book_type, "booker_phone": record.booker_phone,
-               "book_time": record.book_time(), 'status': record.book_status()} for record in
+               "book_time": record.book_time(), 'status': record.book_status(),"booker_info":record.booker_info} for record in
               records.items], total=records.total)
 
 
