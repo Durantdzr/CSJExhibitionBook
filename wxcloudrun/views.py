@@ -12,6 +12,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from wxcloudrun import db
 from sqlalchemy import or_, and_
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt, verify_jwt_in_request
 
 tz = pytz.timezone('Asia/Shanghai')
 # 初始化日志
@@ -129,7 +130,7 @@ def get_user_book_enable():
     # records = None
     if records is None:
         # openday = get_available_open_day()
-        available, opendays,openday = get_book_available()
+        available, opendays, openday = get_book_available()
         if len(opendays) > 0:
             if available <= 0:
                 return make_err_response({"status": 0, "msg": "当前可预约开放日人数已满"})
@@ -205,7 +206,8 @@ def get_total_book_record():
     return make_succ_page_response(
         data=[{"id": record.id, "booker_name": record.booker_name, "book_num": record.book_num,
                "book_type": record.book_type, "booker_phone": record.booker_phone,
-               "book_time": record.book_time(), 'status': record.book_status(),"booker_info":record.booker_info} for record in
+               "book_time": record.book_time(), 'status': record.book_status(), "booker_info": record.booker_info} for
+              record in
               records.items], total=records.total)
 
 
@@ -404,3 +406,26 @@ def get_book_statistics():
         del item['上午']
         del item['下午']
     return make_succ_response(data)
+
+
+@app.route('/api/manage/login', methods=['POST'])
+def login():
+    """
+        :return:用户登录
+        """
+    params = request.get_json()
+    username = params.get('username')
+    pwdhash = params.get('pwdhash')
+    if username!='admin' or pwdhash != '5c044d2e1b6c30f51df04fab2d693691':
+        return make_err_response('用户名或密码错误')
+    access_token = create_access_token(identity=username, expires_delta=timedelta(days=1))
+    return make_succ_response({"access_token": access_token,"branch":0}, code=200)
+
+
+@app.route('/api/manage/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """
+        :return:用户登出
+        """
+    return make_succ_response('用户已登出', code=200)

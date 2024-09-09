@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
 import config
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 # 因MySQLDB不支持Python3，使用pymysql扩展库代替MySQLDB库
 pymysql.install_as_MySQLdb()
@@ -16,6 +18,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@{}/exhibition_book'.forma
 
 # 初始化DB操作对象
 db = SQLAlchemy(app)
+app.config['JWT_SECRET_KEY'] = 'shdata'
+jwt = JWTManager(app)
+CORS(app, resources={r"/api/manage/*": {"origins": '*'}},supports_credentials=True)
 
 # 加载控制器
 from wxcloudrun import views
