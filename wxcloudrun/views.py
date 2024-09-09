@@ -462,4 +462,4 @@ def download_total_book_record():
                "预约场次": record.book_type, "手机号": record.booker_phone,
                "预约时间": record.book_time(), '预约状态': record.book_status(), "身份信息": record.booker_info}, ignore_index=True)
     df.to_excel('人员信息表{}.xlsx'.format(now), index=False)
-    return send_file('人员信息表{}.xlsx'.format(now),download_name='人员信息表{}.xlsx'.format(now))
+    return send_file('../人员信息表{}.xlsx'.format(now),download_name='人员信息表{}.xlsx'.format(now))
