@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import request,send_file
+from flask import request, send_file
 from run import app
 from wxcloudrun.dao import insert_book_record, get_book_available, delete_bookbyid, get_book_available_bytype, \
     get_available_open_day, get_book_available_openday, insert_black_list, delete_blacklistbyinfo, insert_openday, \
@@ -14,6 +14,7 @@ from wxcloudrun import db
 from sqlalchemy import or_, and_
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt, verify_jwt_in_request
 import pandas as pd
+
 tz = pytz.timezone('Asia/Shanghai')
 # 初始化日志
 logger = logging.getLogger('log')
@@ -184,7 +185,8 @@ def get_total_book_record():
     page_size = request.args.get('page_size', default=10, type=int)
     booker_name = request.args.get('booker_name', default=None)
     openday = request.args.get('openday', default=None)
-    if booker_name is None and openday is None:
+    status = request.args.get('status', default=None)
+    if booker_name is None and openday is None and status is None:
         records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.book_type.asc(),
                                              Book_Record.booker_name.desc(),
                                              Book_Record.booker_phone.desc()).paginate(page, per_page=page_size,
@@ -195,6 +197,15 @@ def get_total_book_record():
             filters.append(Book_Record.booker_name == booker_name)
         if openday is not None:
             filters.append(Book_Record.openday == openday)
+        if status is not None:
+            if status == "已取消":
+                filters.append(Book_Record.status == 0)
+            elif status == '已出行':
+                filters.append(Book_Record.status == 1)
+                filters.append(Book_Record.openday <= datetime.now() - timedelta(days=1))
+            else:
+                filters.append(Book_Record.status == 1)
+                filters.append(Book_Record.openday > datetime.now() - timedelta(days=1))
         records = Book_Record.query.filter(*filters).order_by(
             Book_Record.openday.desc(),
             Book_Record.book_type.asc(),
@@ -416,10 +427,10 @@ def login():
     params = request.get_json()
     username = params.get('username')
     pwdhash = params.get('pwdhash')
-    if username!='admin' or pwdhash != '5c044d2e1b6c30f51df04fab2d693691':
+    if username != 'admin' or pwdhash != '5c044d2e1b6c30f51df04fab2d693691':
         return make_err_response('用户名或密码错误')
     access_token = create_access_token(identity=username, expires_delta=timedelta(days=1))
-    return make_succ_response({"access_token": access_token,"branch":0}, code=200)
+    return make_succ_response({"access_token": access_token, "branch": 0}, code=200)
 
 
 @app.route('/api/manage/logout', methods=['POST'])
@@ -439,6 +450,7 @@ def download_total_book_record():
     """
     booker_name = request.args.get('booker_name', default=None)
     openday = request.args.get('openday', default=None)
+    status = request.args.get('status', default=None)
     if booker_name is None and openday is None:
         records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.book_type.asc(),
                                              Book_Record.booker_name.desc(),
@@ -449,6 +461,15 @@ def download_total_book_record():
             filters.append(Book_Record.booker_name == booker_name)
         if openday is not None:
             filters.append(Book_Record.openday == openday)
+        if status is not None:
+            if status == "已取消":
+                filters.append(Book_Record.status == 0)
+            elif status == '已出行':
+                filters.append(Book_Record.status == 1)
+                filters.append(Book_Record.openday <= datetime.now() - timedelta(days=1))
+            else:
+                filters.append(Book_Record.status == 1)
+                filters.append(Book_Record.openday > datetime.now() - timedelta(days=1))
         records = Book_Record.query.filter(*filters).order_by(
             Book_Record.openday.desc(),
             Book_Record.book_type.asc(),
@@ -459,7 +480,8 @@ def download_total_book_record():
     now = datetime.now().strftime('%Y-%m-%d%H:%M:%S')
     for record in records:
         df = df.append({"记录号": record.id, "预约人姓名": record.booker_name, "预约数": record.book_num,
-               "预约场次": record.book_type, "手机号": record.booker_phone,
-               "预约时间": record.book_time(), '预约状态': record.book_status(), "身份信息": record.booker_info}, ignore_index=True)
+                        "预约场次": record.book_type, "手机号": record.booker_phone,
+                        "预约时间": record.book_time(), '预约状态': record.book_status(),
+                        "身份信息": record.booker_info}, ignore_index=True)
     df.to_excel('人员信息表{}.xlsx'.format(now), index=False)
-    return send_file('../人员信息表{}.xlsx'.format(now),download_name='人员信息表{}.xlsx'.format(now))
+    return send_file('../人员信息表{}.xlsx'.format(now), download_name='人员信息表{}.xlsx'.format(now))
