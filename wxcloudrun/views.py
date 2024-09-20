@@ -451,7 +451,7 @@ def download_total_book_record():
     booker_name = request.args.get('booker_name', default=None)
     openday = request.args.get('openday', default=None)
     status = request.args.get('status', default=None)
-    if booker_name is None and openday is None:
+    if booker_name is None and openday is None and status is None:
         records = Book_Record.query.order_by(Book_Record.openday.desc(), Book_Record.book_type.asc(),
                                              Book_Record.booker_name.desc(),
                                              Book_Record.booker_phone.desc()).all()
