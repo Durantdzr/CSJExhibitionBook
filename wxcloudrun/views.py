@@ -44,6 +44,11 @@ def book_record():
     record.booker_phone = params.get("booker_phone")
     record.booker_info = params.get("booker_info")
     record.openday = params.get("openday")
+    book_record = Book_Record.query.filter(Book_Record.booker_phone == params.get("booker_phone"),
+                                           Book_Record.status == 1, Book_Record.book_type == params.get("book_type"),
+                                           Book_Record.openday == params.get("openday")).first()
+    if book_record is not None:
+        return make_err_response('该用户已预约')
     black = BlackList.query.filter(BlackList.status == 1, BlackList.booker_info == params.get("booker_info")).first()
     if black is not None:
         return make_err_response('该用户不可预约')
